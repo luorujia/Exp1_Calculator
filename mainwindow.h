@@ -51,6 +51,7 @@ private:
     void   highlightOperatorButton(const QString &op); // 高亮当前待执行的运算符
     void   flashButton(const QString &token);          // 键盘按下时给对应按钮一次"按下"反馈
     void   connectButtons();                     // 批量关联按钮信号与处理逻辑
+    void   loadStyleSheet();                     // 从资源文件加载 QSS 样式表
 
     static QString formatNumber(double value);          // 统一数字格式化，避免浮点尾巴
     static QString displayOperator(const QString &op);  // 内部运算符 -> 界面显示符号

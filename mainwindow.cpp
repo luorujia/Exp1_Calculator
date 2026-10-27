@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include <QDebug>
+#include <QFile>
 #include <QHash>
 #include <QKeyEvent>
 #include <QLineEdit>
@@ -50,9 +51,21 @@ MainWindow::MainWindow(QWidget *parent)
     // 因此按键不会被子控件"吃掉"，键盘事件一定能到达 keyPressEvent。
     setFocusPolicy(Qt::StrongFocus);
 
+    loadStyleSheet();
     connectButtons();
     clearAll();
     setFocus();
+}
+
+void MainWindow::loadStyleSheet()
+{
+    // 样式表集中放在 style.qss 里，经 resources.qrc 编进二进制，
+    // 好处是界面外观与业务逻辑分离，且发布时不需要额外携带外部文件。
+    QFile qssFile(QStringLiteral(":/style.qss"));
+    if (qssFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        setStyleSheet(QString::fromUtf8(qssFile.readAll()));
+    else
+        qWarning() << "样式表加载失败：" << qssFile.fileName();
 }
 
 MainWindow::~MainWindow()
@@ -173,6 +186,13 @@ void MainWindow::clearAll()
 
 void MainWindow::updateDisplay()
 {
+    // 错误态切换 error 动态属性，让 QSS 把提示文字染成红色（只在状态变化时重新 polish，避免每次刷新都做无用功）
+    if (ui->displayEdit->property("error").toBool() != m_hasError) {
+        ui->displayEdit->setProperty("error", m_hasError);
+        ui->displayEdit->style()->unpolish(ui->displayEdit);
+        ui->displayEdit->style()->polish(ui->displayEdit);
+    }
+
     if (m_hasError) {
         ui->displayEdit->setText(m_errorMessage);
         ui->expressionLabel->clear();

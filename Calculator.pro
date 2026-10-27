@@ -17,6 +17,8 @@ HEADERS  += mainwindow.h
 
 FORMS    += mainwindow.ui
 
+RESOURCES += resources.qrc
+
 # 默认部署规则
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin

@@ -1,0 +1,100 @@
+/* ==========================================================================
+ * 计算器界面样式表
+ * 设计思路：深色底 + 浅色数字键 + 橙色运算符，形成清晰的视觉层级
+ *          - 数字键最浅，因为使用频率最高
+ *          - 运算符统一橙色，等号用实心橙强调
+ *          - 当前待执行的运算符由 C++ 设置动态属性 active 反色高亮
+ * ========================================================================== */
+
+QMainWindow,
+QWidget#centralwidget {
+    background-color: #1e1f22;
+}
+
+/* 上方表达式行：弱化的灰色小字，不与主显示抢焦点 */
+QLabel#expressionLabel {
+    color: #8b8f98;
+    background: transparent;
+    padding-right: 8px;
+}
+
+/* 主显示区：内凹的深色圆角面板 */
+QLineEdit#displayEdit {
+    background-color: #26282c;
+    border: 1px solid #34373c;
+    border-radius: 12px;
+    padding: 4px 16px;
+    color: #f5f6f7;
+    selection-background-color: #ff9f0a;
+}
+
+/* 错误态（如除数为 0）：文字转为红色，与正常结果区分开 */
+QLineEdit#displayEdit[error="true"] {
+    color: #ff6159;
+    border-color: #7a3230;
+}
+
+/* 所有按钮的公共外观 */
+QPushButton {
+    background-color: #2f3237;
+    border: none;
+    border-radius: 10px;
+    color: #f2f3f5;
+    font-size: 17px;
+}
+QPushButton:hover {
+    background-color: #3b3f45;
+}
+QPushButton:pressed {
+    background-color: #4a4f56;
+}
+
+/* 清除 / 退格：次要功能键，底色略深、文字橙色 */
+QPushButton#btnClear,
+QPushButton#btnBackspace {
+    background-color: #3f434a;
+    color: #ffb340;
+    font-size: 18px;
+}
+QPushButton#btnClear:hover,
+QPushButton#btnBackspace:hover {
+    background-color: #4a4f57;
+}
+
+/* 四则运算符 */
+QPushButton#btnAdd,
+QPushButton#btnSubtract,
+QPushButton#btnMultiply,
+QPushButton#btnDivide {
+    background-color: #3a3f47;
+    color: #ff9f0a;
+    font-size: 21px;
+}
+QPushButton#btnAdd:hover,
+QPushButton#btnSubtract:hover,
+QPushButton#btnMultiply:hover,
+QPushButton#btnDivide:hover {
+    background-color: #454b54;
+}
+
+/* 当前待执行的运算符：反色高亮，让用户随时知道在等第二个操作数的是哪个运算 */
+QPushButton#btnAdd[active="true"],
+QPushButton#btnSubtract[active="true"],
+QPushButton#btnMultiply[active="true"],
+QPushButton#btnDivide[active="true"] {
+    background-color: #ff9f0a;
+    color: #1e1f22;
+}
+
+/* 等号：整块实心橙，作为最主要的操作 */
+QPushButton#btnEqual {
+    background-color: #ff9f0a;
+    color: #1e1f22;
+    font-size: 24px;
+}
+QPushButton#btnEqual:hover {
+    background-color: #ffb03a;
+}
+QPushButton#btnEqual:pressed {
+    background-color: #e08a00;
+}
