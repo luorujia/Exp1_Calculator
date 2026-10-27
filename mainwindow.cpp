@@ -225,10 +225,24 @@ bool MainWindow::computePending()
     const double rhs = currentValue();
     double result = 0.0;
 
+    // 除数为 0 必须在做除法之前拦截：否则会得到 inf/NaN，
+    // 一旦被当作结果继续参与后续运算，整个计算链都会变成 inf，用户无从察觉。
+    // qFuzzyIsNull 用极小值做比较，可同时覆盖 0、0.0、-0 以及 "0." 这类输入形态。
+    if (m_pendingOperator == QStringLiteral("/") && qFuzzyIsNull(rhs)) {
+        enterError(QStringLiteral("除数不能为 0"));
+        return false;
+    }
+
     if      (m_pendingOperator == QStringLiteral("+")) result = m_accumulated + rhs;
     else if (m_pendingOperator == QStringLiteral("-")) result = m_accumulated - rhs;
     else if (m_pendingOperator == QStringLiteral("*")) result = m_accumulated * rhs;
-    else if (m_pendingOperator == QStringLiteral("/")) result = m_accumulated / rhs;  // FIXME(C5)：未判断除数为 0
+    else if (m_pendingOperator == QStringLiteral("/")) result = m_accumulated / rhs;
+
+    // 溢出保护：结果超出 double 表示范围时同样按错误处理
+    if (!std::isfinite(result)) {
+        enterError(QStringLiteral("结果超出范围"));
+        return false;
+    }
 
     m_accumulated = result;
     m_currentInput = formatNumber(result);
