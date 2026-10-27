@@ -115,7 +115,13 @@ void MainWindow::inputDecimalPoint()
     }
     if (m_currentInput.isEmpty())
         m_currentInput = QStringLiteral("0");   // 直接按 "." 时自动补出 "0."
-    m_currentInput += QLatin1Char('.');         // FIXME(C4)：未判断是否已存在小数点
+
+    // 核心判重：一个操作数里只允许出现一个小数点。
+    // 只要已存在 '.'，后续的小数点输入一律忽略，从根上杜绝 "12..3" 这类非法数字。
+    if (m_currentInput.contains(QLatin1Char('.')))
+        return;
+
+    m_currentInput += QLatin1Char('.');
     updateDisplay();
 }
 
