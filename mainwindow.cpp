@@ -114,6 +114,7 @@ void MainWindow::inputDigit(const QString &digit)
         m_currentInput.clear();
         m_waitingForOperand = false;
     }
+    m_lastExpression.clear();       // 重新开始输入，上一轮的算式不再展示
     if (m_currentInput == QStringLiteral("0"))
         m_currentInput.clear();     // 去掉前导 0，避免 "0" -> "05"
     if (m_currentInput.size() >= kMaxInputLength)
@@ -132,6 +133,7 @@ void MainWindow::inputDecimalPoint()
     }
     if (m_currentInput.isEmpty())
         m_currentInput = QStringLiteral("0");   // 直接按 "." 时自动补出 "0."
+    m_lastExpression.clear();
 
     // 核心判重：一个操作数里只允许出现一个小数点。
     // 只要已存在 '.'，后续的小数点输入一律忽略，从根上杜绝 "12..3" 这类非法数字。
@@ -161,6 +163,7 @@ void MainWindow::clearAll()
     m_currentInput.clear();
     m_accumulated = 0.0;
     m_pendingOperator.clear();
+    m_lastExpression.clear();
     m_waitingForOperand = false;
     m_hasError = false;
     m_errorMessage.clear();
@@ -177,9 +180,10 @@ void MainWindow::updateDisplay()
     }
     ui->displayEdit->setText(m_currentInput.isEmpty() ? QStringLiteral("0") : m_currentInput);
 
-    // 表达式行：显示"左操作数 运算符"，例如 "12.5 +"
+    // 表达式行：有待执行运算符时显示"左操作数 运算符"（如 "12.5 +"），
+    // 否则显示上一次的完整算式（如 "12.5 + 3.75 ="）
     if (m_pendingOperator.isEmpty())
-        ui->expressionLabel->clear();
+        ui->expressionLabel->setText(m_lastExpression);
     else
         ui->expressionLabel->setText(formatNumber(m_accumulated) + QLatin1Char(' ')
                                      + displayOperator(m_pendingOperator));
@@ -228,9 +232,15 @@ void MainWindow::calculateResult()
         m_currentInput = formatNumber(m_accumulated);
     }
 
+    // 先把完整算式拼出来，结算后显示在表达式行，便于回看刚才算的是什么
+    const QString expression = formatNumber(m_accumulated) + QLatin1Char(' ')
+                             + displayOperator(m_pendingOperator) + QLatin1Char(' ')
+                             + formatNumber(currentValue());
+
     if (!computePending())
         return;
 
+    m_lastExpression = expression + QStringLiteral(" =");
     m_pendingOperator.clear();
     highlightOperatorButton(QString());
 

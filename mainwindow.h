@@ -61,6 +61,7 @@ private:
     QString m_currentInput;      // 当前正在输入的操作数（字符串形态，可保留 "12." 这类中间态）
     double  m_accumulated;       // 左操作数；连续运算时保存累积结果
     QString m_pendingOperator;   // 待执行运算符；为空表示当前没有待执行的运算
+    QString m_lastExpression;    // 上一次完整计算过程，例如 "12.5 + 3.75 ="，显示在表达式行
     bool    m_waitingForOperand; // true：下一个数字要开启新操作数（刚按运算符或刚算出结果）
     bool    m_hasError;          // true：错误态（除零 / 溢出），只能由 C 或新数字解除
     QString m_errorMessage;      // 错误提示文本
