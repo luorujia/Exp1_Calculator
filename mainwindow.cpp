@@ -233,7 +233,10 @@ void MainWindow::calculateResult()
 
     m_pendingOperator.clear();
     highlightOperatorButton(QString());
-    // FIXME(C7)：算出结果后未置 m_waitingForOperand，导致继续输入数字会追加到结果后面
+
+    // 结果已经算出，下一次数字输入必须开启一个全新的操作数，
+    // 否则新输入的数字会被追加到结果字符串后面（例如 2+3= 得 5，再按 7 变成 57）。
+    m_waitingForOperand = true;
     updateDisplay();
 }
 
