@@ -49,7 +49,7 @@ private:
     void   enterError(const QString &message);   // 进入错误态
     void   updateDisplay();                      // 刷新表达式行与结果显示
     void   highlightOperatorButton(const QString &op); // 高亮当前待执行的运算符
-    void   flashButton(const QString &objectName);     // 键盘按下时给对应按钮视觉反馈
+    void   flashButton(const QString &token);          // 键盘按下时给对应按钮一次"按下"反馈
     void   connectButtons();                     // 批量关联按钮信号与处理逻辑
 
     static QString formatNumber(double value);          // 统一数字格式化，避免浮点尾巴

@@ -18,6 +18,23 @@ const QString kTokenPoint     = QStringLiteral(".");
 const QString kTokenEqual     = QStringLiteral("=");
 const QString kTokenBackspace = QStringLiteral("BS");
 const QString kTokenClear     = QStringLiteral("C");
+
+/** token -> 对应按钮的 objectName，供键盘输入时的视觉反馈使用 */
+QString buttonNameOfToken(const QString &token)
+{
+    if (token.size() == 1 && token.at(0).isDigit())
+        return QStringLiteral("btnDigit") + token;
+
+    if (token == kTokenPoint)          return QStringLiteral("btnPoint");
+    if (token == QStringLiteral("+"))  return QStringLiteral("btnAdd");
+    if (token == QStringLiteral("-"))  return QStringLiteral("btnSubtract");
+    if (token == QStringLiteral("*"))  return QStringLiteral("btnMultiply");
+    if (token == QStringLiteral("/"))  return QStringLiteral("btnDivide");
+    if (token == kTokenEqual)          return QStringLiteral("btnEqual");
+    if (token == kTokenBackspace)      return QStringLiteral("btnBackspace");
+    if (token == kTokenClear)          return QStringLiteral("btnClear");
+    return QString();
+}
 } // namespace
 
 MainWindow::MainWindow(QWidget *parent)
@@ -284,10 +301,52 @@ void MainWindow::highlightOperatorButton(const QString &op)
     }
 }
 
-void MainWindow::flashButton(const QString &objectName) { Q_UNUSED(objectName); }
+void MainWindow::flashButton(const QString &token)
+{
+    QPushButton *btn = findChild<QPushButton *>(buttonNameOfToken(token));
+    if (!btn)
+        return;
+
+    // 键盘输入时让对应按钮"闪一下"，使键盘操作与鼠标点击的视觉反馈保持一致
+    btn->setDown(true);
+    QTimer::singleShot(120, btn, [btn]() { btn->setDown(false); });
+}
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    Q_UNUSED(event);
-    QMainWindow::keyPressEvent(event);
+    // 键盘处理只做一件事：把物理按键翻译成与按钮一致的 token，
+    // 然后交给 handleInput()。因此鼠标与键盘天然复用同一套处理逻辑。
+    const int     key  = event->key();
+    const QString text = event->text();
+
+    QString token;
+    if (key >= Qt::Key_0 && key <= Qt::Key_9) {
+        // 主键盘数字与小键盘数字（Qt::KeypadModifier）都会落到 Key_0~Key_9，无需分别处理
+        token = QString::number(key - Qt::Key_0);
+    } else if (key == Qt::Key_Period || key == Qt::Key_Comma
+               || text == QStringLiteral(".") || text == QStringLiteral(",")) {
+        token = kTokenPoint;                       // "." 与 "," 都当小数点，兼容小键盘的 Del 键位习惯
+    } else if (key == Qt::Key_Plus || text == QStringLiteral("+")) {
+        token = QStringLiteral("+");
+    } else if (key == Qt::Key_Minus || text == QStringLiteral("-")) {
+        token = QStringLiteral("-");
+    } else if (key == Qt::Key_Asterisk || text == QStringLiteral("*")) {
+        token = QStringLiteral("*");
+    } else if (key == Qt::Key_Slash || text == QStringLiteral("/")) {
+        token = QStringLiteral("/");
+    } else if (key == Qt::Key_Return || key == Qt::Key_Enter
+               || key == Qt::Key_Equal || text == QStringLiteral("=")) {
+        token = kTokenEqual;                       // 回车 / 小键盘 Enter / "=" 都表示等号
+    } else if (key == Qt::Key_Backspace) {
+        token = kTokenBackspace;
+    } else if (key == Qt::Key_Escape || key == Qt::Key_Delete) {
+        token = kTokenClear;                       // Esc / Del 等同 C
+    } else {
+        QMainWindow::keyPressEvent(event);         // 未定义的按键交回基类，不吞掉
+        return;
+    }
+
+    handleInput(token);                            // ★ 与鼠标点击完全相同的入口
+    flashButton(token);
+    event->accept();
 }
