@@ -2,9 +2,11 @@
 #include "ui_mainwindow.h"
 
 #include <QDebug>
+#include <QHash>
 #include <QKeyEvent>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QStyle>
 #include <QTimer>
 
 #include <cmath>
@@ -174,12 +176,94 @@ QString MainWindow::displayOperator(const QString &op)
     return op;
 }
 
-void MainWindow::applyOperator(const QString &op)       { Q_UNUSED(op); }
-void MainWindow::calculateResult()                      {}
-bool MainWindow::computePending()                       { return false; }
-double MainWindow::currentValue() const                 { return 0.0; }
-void MainWindow::enterError(const QString &message)     { Q_UNUSED(message); }
-void MainWindow::highlightOperatorButton(const QString &op) { Q_UNUSED(op); }
+void MainWindow::applyOperator(const QString &op)
+{
+    if (m_hasError)
+        return;                         // 错误态下运算符无效，必须先按 C 解除
+
+    if (!m_pendingOperator.isEmpty() && !m_waitingForOperand) {
+        // 连续运算：如 "2 + 3 +"，先把 2+3 结算为 5，再把 "+" 挂为新的待执行运算符
+        if (!computePending())
+            return;
+    } else {
+        m_accumulated = currentValue(); // 记录第一个操作数
+    }
+
+    m_pendingOperator = op;
+    m_waitingForOperand = true;         // 下一个数字开启第二个操作数
+    highlightOperatorButton(op);
+    updateDisplay();
+}
+
+void MainWindow::calculateResult()
+{
+    if (m_hasError || m_pendingOperator.isEmpty())
+        return;                         // 没有待执行的运算时，等号无效
+
+    if (m_waitingForOperand) {
+        // "8 + =" 这类输入：第二个操作数缺省取左操作数（与 Windows 计算器行为一致）
+        m_currentInput = formatNumber(m_accumulated);
+    }
+
+    if (!computePending())
+        return;
+
+    m_pendingOperator.clear();
+    highlightOperatorButton(QString());
+    // FIXME(C7)：算出结果后未置 m_waitingForOperand，导致继续输入数字会追加到结果后面
+    updateDisplay();
+}
+
+bool MainWindow::computePending()
+{
+    const double rhs = currentValue();
+    double result = 0.0;
+
+    if      (m_pendingOperator == QStringLiteral("+")) result = m_accumulated + rhs;
+    else if (m_pendingOperator == QStringLiteral("-")) result = m_accumulated - rhs;
+    else if (m_pendingOperator == QStringLiteral("*")) result = m_accumulated * rhs;
+    else if (m_pendingOperator == QStringLiteral("/")) result = m_accumulated / rhs;  // FIXME(C5)：未判断除数为 0
+
+    m_accumulated = result;
+    m_currentInput = formatNumber(result);
+    return true;
+}
+
+double MainWindow::currentValue() const
+{
+    // m_currentInput 是字符串，"12." 这类输入中间态也能被 toDouble 正确解析
+    return m_currentInput.toDouble();
+}
+
+void MainWindow::enterError(const QString &message)
+{
+    m_hasError = true;
+    m_errorMessage = message;
+    m_pendingOperator.clear();          // 出错后不再保留待执行运算
+    highlightOperatorButton(QString());
+    updateDisplay();
+}
+
+void MainWindow::highlightOperatorButton(const QString &op)
+{
+    // 用动态属性 + unpolish/polish 切换"当前待执行运算符"的高亮，
+    // 避免为 4 个运算符按钮各写一段重复的样式代码。
+    static const QHash<QString, QString> buttonOfOperator {
+        { QStringLiteral("+"), QStringLiteral("btnAdd")      },
+        { QStringLiteral("-"), QStringLiteral("btnSubtract") },
+        { QStringLiteral("*"), QStringLiteral("btnMultiply") },
+        { QStringLiteral("/"), QStringLiteral("btnDivide")   },
+    };
+    for (auto it = buttonOfOperator.constBegin(); it != buttonOfOperator.constEnd(); ++it) {
+        QPushButton *btn = findChild<QPushButton *>(it.value());
+        if (!btn)
+            continue;
+        btn->setProperty("active", it.key() == op);
+        btn->style()->unpolish(btn);
+        btn->style()->polish(btn);
+    }
+}
+
 void MainWindow::flashButton(const QString &objectName) { Q_UNUSED(objectName); }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
