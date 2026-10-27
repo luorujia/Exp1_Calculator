@@ -1,0 +1,27 @@
+# Qt / qmake 构建产物
+build-*/
+*.pro.user
+*.pro.user.*
+Makefile
+Makefile.Debug
+Makefile.Release
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+object_script.*.Release
+object_script.*.Debug
+
+# 可执行文件与中间目标
+*.o
+*.obj
+*.exe
+*.ilk
+*.pdb
+*.res
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
