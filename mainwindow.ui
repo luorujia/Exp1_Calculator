@@ -16,6 +16,12 @@
     <height>460</height>
    </size>
   </property>
+  <property name="font">
+   <font>
+    <family>Microsoft YaHei UI</family>
+    <pointsize>11</pointsize>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>计算器 - 带键盘事件</string>
   </property>
@@ -47,8 +53,14 @@
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>24</height>
+        <height>26</height>
        </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Microsoft YaHei UI</family>
+        <pointsize>10</pointsize>
+       </font>
       </property>
       <property name="text">
        <string/>
@@ -69,8 +81,14 @@
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>64</height>
+        <height>72</height>
        </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Microsoft YaHei UI</family>
+        <pointsize>22</pointsize>
+       </font>
       </property>
       <property name="text">
        <string>0</string>
@@ -128,7 +146,7 @@
          <enum>Qt::NoFocus</enum>
         </property>
         <property name="text">
-         <string>⌫</string>
+         <string>←</string>
         </property>
        </widget>
       </item>
